@@ -17,6 +17,8 @@ When a plan moves from in-progress to complete, mark it accordingly.
 docs/
   plans/
     plan-terraform-adk-agents-migration.md   # Migrate GCP Calendar SA from adk-playground → this repo; OpenTofu local state → HCP Terraform
+  security/
+    sop-secret-hygiene.md                    # SOP: preventing credential exposure in git, CI logs, and Terraform state
 ```
 
 ---
@@ -30,6 +32,7 @@ cloud-infrastructure/
   terraform-adk-agents/       # Google Calendar service account (GCP) — planned, not yet scaffolded
   docs/
     plans/                    # Migration and implementation plans
+    security/                 # SOPs and security guidelines
   README.md
 ```
 
