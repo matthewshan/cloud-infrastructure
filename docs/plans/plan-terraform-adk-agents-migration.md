@@ -22,7 +22,7 @@ HashiCorp Terraform with HCP Terraform (free tier) as the remote backend.
 
 - [x] HCP Terraform account at [app.terraform.io](https://app.terraform.io)
 - [x] HCP Terraform organization created (record the org name)
-- [x] HCP Terraform workspace created: `google-calendar-sa`
+- [x] HCP Terraform workspace created: `terraform-adk-agents`
 - [x] HashiCorp `terraform` CLI installed (not OpenTofu)
 - [x] GCP credentials available locally for the one-time migration run
 
@@ -119,7 +119,7 @@ terraform {
   cloud {
     organization = "<your-hcp-org-name>"
     workspaces {
-      name = "google-calendar-sa"
+      name = "terraform-adk-agents"
     }
   }
 
@@ -264,7 +264,7 @@ on:
 
 env:
   TF_CLOUD_ORGANIZATION: "<your-hcp-org-name>"
-  TF_WORKSPACE: "google-calendar-sa"
+  TF_WORKSPACE: "terraform-adk-agents"
   TF_DIRECTORY: "terraform-adk-agents"
 
 jobs:
