@@ -9,3 +9,49 @@ terraform-adk-agents/   # Google Calendar service account (GCP) — see docs/pla
 docs/
   plans/                # Migration and implementation plans
 ```
+
+## Generating GCP credentials (`GOOGLE_CREDENTIALS`)
+
+The HCP Terraform workspace requires a `GOOGLE_CREDENTIALS` environment variable
+containing the JSON key of a dedicated CI service account. Run these `gcloud`
+commands once to create it:
+
+```bash
+# 1. Create the service account
+gcloud iam service-accounts create terraform-ci \
+  --display-name="Terraform CI" \
+  --project=<your-project-id>
+
+# 2. Grant the roles Terraform needs to manage IAM and enable APIs
+gcloud projects add-iam-policy-binding <your-project-id> \
+  --member="serviceAccount:terraform-ci@<your-project-id>.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountAdmin"
+
+gcloud projects add-iam-policy-binding <your-project-id> \
+  --member="serviceAccount:terraform-ci@<your-project-id>.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountKeyAdmin"
+
+gcloud projects add-iam-policy-binding <your-project-id> \
+  --member="serviceAccount:terraform-ci@<your-project-id>.iam.gserviceaccount.com" \
+  --role="roles/serviceusage.serviceUsageAdmin"
+
+# 3. Download the key (do NOT commit this file)
+gcloud iam service-accounts keys create terraform-ci-key.json \
+  --iam-account="terraform-ci@<your-project-id>.iam.gserviceaccount.com"
+```
+
+HCP Terraform does not accept multi-line values for environment variables. Minify
+the key to a single line first (PowerShell):
+
+```powershell
+# 4. Print the key as a single-line JSON string — copy this output
+(Get-Content terraform-ci-key.json -Raw | ConvertFrom-Json | ConvertTo-Json -Compress -Depth 10)
+```
+
+Paste the single-line output as a sensitive **Environment variable** named
+`GOOGLE_CREDENTIALS` in the HCP Terraform workspace UI.
+
+```powershell
+# 5. Delete the local key file — do NOT commit it
+Remove-Item terraform-ci-key.json
+```
