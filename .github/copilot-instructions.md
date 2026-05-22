@@ -5,6 +5,14 @@ modules for cloud resources across personal projects.
 
 ---
 
+## Operational safety
+
+**Never push commits or force-push branches without explicit user approval.**
+Stage and show the diff first; wait for confirmation before running any
+`git push` command.
+
+---
+
 ## Documentation maintenance
 
 **Keep the docs index below in sync with the repo.** Whenever a document is
