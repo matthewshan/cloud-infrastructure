@@ -217,17 +217,16 @@ project_id = "your-gcp-project-id"
 
 ---
 
-## Phase 6 — CI/CD via GitHub Actions
+## Phase 6 — CI/CD via VCS-driven workflow
 
-The HCP Terraform workspace stays **CLI-driven** (no VCS link). GitHub Actions
-triggers runs via the HCP Terraform API using `hashicorp/tfc-workflows-github`.
+Connect the HCP Terraform workspace directly to GitHub. This replaces any
+GitHub Actions workflow — no `TF_API_TOKEN` secret or workflow file needed.
 
-**Why not `hashicorp/setup-terraform` + `terraform plan` directly?**  
-This repo is public. Direct `terraform plan/apply` streams full output —
-including sensitive resource attributes — into public GitHub Actions logs.
-The `tfc-workflows-github` actions trigger runs via the HCP Terraform API
-instead; the full plan/apply output stays in the HCP Terraform UI (private)
-and only a pass/fail status is reported back to Actions.
+**Why VCS-driven over GitHub Actions + `tfc-workflows-github`?**  
+This repo is public. Any approach that runs `terraform plan/apply` in Actions
+risks streaming sensitive resource attributes into public logs. With the
+VCS-driven workflow, all plan and apply output stays inside the HCP Terraform
+UI (private). GitHub only receives a pass/fail status check.
 
 ### 6a. Mark sensitive outputs in `outputs.tf`
 
@@ -235,72 +234,36 @@ Any output that contains a secret must use `sensitive = true` to prevent
 Terraform from ever printing the value in plain text:
 
 ```hcl
-output "service_account_key" {
-  value     = google_service_account_key.calendar_sa_key.private_key
+output "service_account_key_base64" {
+  value     = google_service_account_key.daily_briefing.private_key
   sensitive = true
 }
 ```
 
-### 6b. Create a HCP Terraform API token for CI
+### 6b. Connect the workspace to GitHub
 
-HCP Terraform → User Settings → **Tokens** → Create an API token.  
-Add it as a GitHub Actions secret named `TF_API_TOKEN` in  
-`matthewshan/cloud-infrastructure` → Settings → Secrets → Actions.
+1. HCP Terraform → Organization Settings → **VCS Providers** → Add provider →
+   **GitHub.com** → complete the OAuth flow
+2. Workspace `terraform-adk-agents` → **Settings** → **Version Control** →
+   Connect to VCS:
+   - Repository: `matthewshan/cloud-infrastructure`
+   - Branch: `main`
+   - **Working directory:** `terraform-adk-agents`
+   - **Trigger paths:** `terraform-adk-agents/` (only run when this directory changes)
+   - Auto-apply: enable to apply automatically on merge; disable to require
+     manual confirmation in the HCP Terraform UI
+3. Save — HCP Terraform installs a GitHub webhook automatically.
 
-### 6c. Create the workflow file
+### How runs work after connecting
 
-Create `.github/workflows/terraform-adk-agents.yml`:
+| Event | What HCP Terraform does |
+|---|---|
+| Push / merge to `main` | Queues a plan + apply run, linked to the commit SHA |
+| Pull request opened/updated | Queues a **speculative plan** (plan-only, never applied); posts result as a GitHub status check on the PR |
+| `terraform apply` locally | Becomes a speculative plan only — applies are blocked from the CLI |
 
-```yaml
-name: Terraform — adk-agents
-
-on:
-  push:
-    branches: [main]
-    paths: [terraform-adk-agents/**]
-  pull_request:
-    branches: [main]
-    paths: [terraform-adk-agents/**]
-
-env:
-  TF_CLOUD_ORGANIZATION: "<your-hcp-org-name>"
-  TF_WORKSPACE: "terraform-adk-agents"
-  TF_DIRECTORY: "terraform-adk-agents"
-
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1
-        id: upload
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          directory: ${{ env.TF_DIRECTORY }}
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
-      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1
-        id: run
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.upload.outputs.configuration_version_id }}
-          plan_only: ${{ github.event_name == 'pull_request' }}
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
-      - uses: hashicorp/tfc-workflows-github/actions/apply-run@v1
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          run: ${{ steps.run.outputs.run_id }}
-          comment: "Triggered by merge to main"
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-```
-
-The `paths` filter ensures the workflow only fires when files inside
-`terraform-adk-agents/` change — adding future modules won't trigger it.
+For emergency manual runs, use **Actions → Start new run** in the HCP
+Terraform UI.
 
 ---
 
@@ -331,7 +294,7 @@ Once state migration is verified in HCP Terraform:
 - [ ] `terraform.tfvars.example` committed
 - [ ] `project_id` and `GOOGLE_CREDENTIALS` set in HCP Terraform workspace
 - [ ] Sensitive outputs marked `sensitive = true` in `outputs.tf`
-- [ ] `TF_API_TOKEN` secret set in GitHub repo; `tfc-workflows-github` Actions workflow created
+- [ ] HCP Terraform workspace connected to GitHub via VCS (working dir: `terraform-adk-agents`, trigger path: `terraform-adk-agents/`)
 - [ ] `terraform/` removed from `adk-playground`
 - [ ] Docs in `adk-playground` updated to reference this repo
 
@@ -363,6 +326,6 @@ Once the migration is verified in HCP Terraform:
 - [ ] Local `terraform.tfstate` deleted
 - [ ] `project_id` and `GOOGLE_CREDENTIALS` set as HCP Terraform variables
 - [ ] Sensitive outputs marked `sensitive = true` in `outputs.tf`
-- [ ] `TF_API_TOKEN` secret set in GitHub repo; `tfc-workflows-github` Actions workflow created
+- [ ] HCP Terraform workspace connected to GitHub via VCS (working dir: `terraform-adk-agents`, trigger path: `terraform-adk-agents/`)
 - [ ] `terraform/` removed from `adk-playground`
 - [ ] Docs updated in `adk-playground` to reference new repo
