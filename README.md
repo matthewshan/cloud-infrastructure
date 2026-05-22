@@ -35,7 +35,16 @@ gcloud projects add-iam-policy-binding <your-project-id> \
   --member="serviceAccount:terraform-ci@<your-project-id>.iam.gserviceaccount.com" \
   --role="roles/serviceusage.serviceUsageAdmin"
 
-# 3. Download the key (do NOT commit this file)
+# 4. Enable APIs required by the Google Terraform provider when running as a service account
+#    (these are not auto-enabled when using personal user credentials via gcloud ADC)
+gcloud services enable \
+  cloudresourcemanager.googleapis.com \
+  iam.googleapis.com \
+  iamcredentials.googleapis.com \
+  serviceusage.googleapis.com \
+  --project=<your-project-id>
+
+# 5. Download the key (do NOT commit this file)
 gcloud iam service-accounts keys create terraform-ci-key.json \
   --iam-account="terraform-ci@<your-project-id>.iam.gserviceaccount.com"
 ```
@@ -44,7 +53,7 @@ HCP Terraform does not accept multi-line values for environment variables. Minif
 the key to a single line first (PowerShell):
 
 ```powershell
-# 4. Print the key as a single-line JSON string — copy this output
+# 6. Print the key as a single-line JSON string — copy this output
 (Get-Content terraform-ci-key.json -Raw | ConvertFrom-Json | ConvertTo-Json -Compress -Depth 10)
 ```
 
@@ -52,6 +61,6 @@ Paste the single-line output as a sensitive **Environment variable** named
 `GOOGLE_CREDENTIALS` in the HCP Terraform workspace UI.
 
 ```powershell
-# 5. Delete the local key file — do NOT commit it
+# 7. Delete the local key file — do NOT commit it
 Remove-Item terraform-ci-key.json
 ```
