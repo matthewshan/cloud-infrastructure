@@ -4,7 +4,7 @@ terraform {
   cloud {
     organization = "matthewshan"
     workspaces {
-      name = "supabase-vector"
+      name = "supabase-vector-db"
     }
   }
 

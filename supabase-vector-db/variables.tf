@@ -24,5 +24,5 @@ variable "database_password" {
 variable "region" {
   description = "Supabase region. See https://supabase.com/docs/guides/platform/regions for valid values."
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }

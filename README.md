@@ -6,14 +6,14 @@ Infrastructure-as-code for Matthew Shan's cloud projects.
 
 ```
 terraform-adk-agents/   # Google Calendar service account (GCP) — see docs/plans/plan-terraform-adk-agents-migration.md
-supabase-vector/        # Supabase project with pgvector for ADK agent memory / RAG — see docs/integrations/supabase-vector-adk.md
+supabase-vector-db/     # Supabase project with pgvector for ADK agent memory / RAG — see docs/integrations/supabase-vector-adk.md
 docs/
   integrations/         # How-to guides for wiring modules into ADK agents
   plans/                # Migration and implementation plans
   security/             # SOPs and security guidelines
 ```
 
-## `supabase-vector` — HCP Terraform setup
+## `supabase-vector-db` — HCP Terraform setup
 
 ### Prerequisites
 
@@ -33,7 +33,7 @@ docs/
 ### Create the HCP Terraform workspace
 
 In the [`matthewshan` HCP Terraform organization](https://app.terraform.io/app/matthewshan/workspaces),
-create a new workspace named exactly **`supabase-vector`**. Use the same VCS-driven workflow as the
+create a new workspace named exactly **`supabase-vector-db`**. Use the same VCS-driven workflow as the
 other workspaces in this repo, pointing at this repository.
 
 ### Set workspace variables
@@ -58,7 +58,7 @@ Trigger a plan from the HCP Terraform UI (or push a commit). The apply creates o
 After apply, retrieve the outputs for the next step:
 
 ```bash
-cd supabase-vector
+cd supabase-vector-db
 terraform output project_url
 terraform output -raw service_role_key
 terraform output -raw database_url

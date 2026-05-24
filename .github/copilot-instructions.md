@@ -41,7 +41,7 @@ cloud-infrastructure/
     copilot-instructions.md   # AI instructions — source of truth (imported by CLAUDE.md)
   CLAUDE.md                   # Claude Code entry point — imports copilot-instructions.md
   terraform-adk-agents/       # Google Calendar service account (GCP)
-  supabase-vector/            # Supabase project with pgvector for ADK agent memory / RAG
+  supabase-vector-db/         # Supabase project with pgvector for ADK agent memory / RAG
   docs/
     integrations/             # How-to guides for wiring modules into ADK agents
     plans/                    # Migration and implementation plans
