@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) for local runs.
+# In HCP Terraform, set these as workspace variables instead.
+organization_id = "your-supabase-org-id"
+project_name    = "adk-agents-vector"
+# region = "us-east-1"  # optional, defaults to us-east-1
+
+# Sensitive — set as HCP Terraform workspace variables, not here:
+# supabase_access_token = "sbp_..."
+# database_password     = "..."

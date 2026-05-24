@@ -6,9 +6,68 @@ Infrastructure-as-code for Matthew Shan's cloud projects.
 
 ```
 terraform-adk-agents/   # Google Calendar service account (GCP) — see docs/plans/plan-terraform-adk-agents-migration.md
+supabase-vector/        # Supabase project with pgvector for ADK agent memory / RAG — see docs/integrations/supabase-vector-adk.md
 docs/
+  integrations/         # How-to guides for wiring modules into ADK agents
   plans/                # Migration and implementation plans
+  security/             # SOPs and security guidelines
 ```
+
+## `supabase-vector` — HCP Terraform setup
+
+### Prerequisites
+
+1. **Supabase account** — sign up at [supabase.com](https://supabase.com) if you don't have one.
+
+2. **Organization ID** — open the [Supabase dashboard](https://supabase.com/dashboard) and go to your
+   organization's settings page. The org ID is visible in the URL:
+   `https://supabase.com/dashboard/org/<org-id>/general`
+
+3. **Personal access token** — generate one at
+   [app.supabase.com/account/tokens](https://supabase.com/dashboard/account/tokens).
+   Give it a descriptive name like `terraform-cloud`. Copy the token value immediately — it is not shown again.
+
+4. **Database password** — choose a strong password for the Supabase project's `postgres` user.
+   Generate one with: `openssl rand -base64 32`
+
+### Create the HCP Terraform workspace
+
+In the [`matthewshan` HCP Terraform organization](https://app.terraform.io/app/matthewshan/workspaces),
+create a new workspace named exactly **`supabase-vector`**. Use the same VCS-driven workflow as the
+other workspaces in this repo, pointing at this repository.
+
+### Set workspace variables
+
+In the workspace **Variables** tab, add the following. All five are **Terraform variables**
+(not environment variables).
+
+| Variable | Sensitive | Value |
+|---|---|---|
+| `organization_id` | No | Your Supabase org ID (from the dashboard URL above) |
+| `project_name` | No | `adk-agents-vector` (or a custom name — becomes the Supabase project display name) |
+| `region` | No | `us-east-1` (or the [region](https://supabase.com/docs/guides/platform/regions) nearest to you) |
+| `supabase_access_token` | **Yes** | Personal access token generated above |
+| `database_password` | **Yes** | Strong password generated above — store a copy in your password manager |
+
+### First apply
+
+Trigger a plan from the HCP Terraform UI (or push a commit). The apply creates one resource:
+
+- `supabase_project.vector_db` — the Supabase project (takes ~30 s to provision)
+
+After apply, retrieve the outputs for the next step:
+
+```bash
+cd supabase-vector
+terraform output project_url
+terraform output -raw service_role_key
+terraform output -raw database_url
+```
+
+Then follow **`docs/integrations/supabase-vector-adk.md`** for the one-time SQL schema setup
+(table, index, and RPC function) before connecting ADK agents.
+
+---
 
 ## Generating GCP credentials (`GOOGLE_CREDENTIALS`)
 

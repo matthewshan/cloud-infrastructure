@@ -23,6 +23,8 @@ When a plan moves from in-progress to complete, mark it accordingly.
 
 ```
 docs/
+  integrations/
+    supabase-vector-adk.md                   # Wiring the supabase-vector module into ADK agents (schema setup, Python client, env vars)
   plans/
     plan-terraform-adk-agents-migration.md   # Migrate GCP Calendar SA from adk-playground → this repo; OpenTofu local state → HCP Terraform
   security/
@@ -36,9 +38,12 @@ docs/
 ```
 cloud-infrastructure/
   .github/
-    copilot-instructions.md   # This file
-  terraform-adk-agents/       # Google Calendar service account (GCP) — planned, not yet scaffolded
+    copilot-instructions.md   # AI instructions — source of truth (imported by CLAUDE.md)
+  CLAUDE.md                   # Claude Code entry point — imports copilot-instructions.md
+  terraform-adk-agents/       # Google Calendar service account (GCP)
+  supabase-vector/            # Supabase project with pgvector for ADK agent memory / RAG
   docs/
+    integrations/             # How-to guides for wiring modules into ADK agents
     plans/                    # Migration and implementation plans
     security/                 # SOPs and security guidelines
   README.md
@@ -50,8 +55,9 @@ cloud-infrastructure/
 
 - **Terraform ≥ 1.6** (HashiCorp, not OpenTofu)
 - Remote backend: **HCP Terraform** (cloud block) — never local state
-- One GCP service / concern per directory under the repo root
+- One service / concern per directory under the repo root (GCP, Supabase, etc.)
 - Split each module into `main.tf`, `variables.tf`, `outputs.tf`
 - Commit a `terraform.tfvars.example` documenting required variables; never commit `terraform.tfvars`
-- Always include a `.gitignore` that excludes `*.tfstate`, `*.tfstate.*`, `.terraform/`, and `*.tfvars`
 - Secret values live in HCP Terraform workspace variables (marked sensitive) — never in code or `.tfvars` files committed to git
+- Provider versions: Google `~> 5.0`, Supabase `~> 1.0`
+- Each new module gets its own HCP Terraform workspace named after the directory
